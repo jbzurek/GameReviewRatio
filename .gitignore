@@ -31,3 +31,4 @@ data/01_raw/top_500.csv
 # jeśli ktoś pracuje na Macu
 .DS_Store
 Thumbs.db
+*.csv
