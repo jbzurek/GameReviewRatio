@@ -15,7 +15,7 @@ dist/
 .env.*
 *.env
 
-# Data (nie ładujemy pełbych danych, tylko małe próbki danych)
+# Data (nie ładujemy pełnych danych, tylko małe próbki danych)
 data/*
 !data/01_raw/
 !data/02_interim/
@@ -23,6 +23,10 @@ data/*
 data/**/.gitkeep
 data/**/README.md
 !data/01_raw/sample.csv
+
+# custom
+data/01_raw/top_500.csv
+.idea/
 
 # jeśli ktoś pracuje na Macu
 .DS_Store
