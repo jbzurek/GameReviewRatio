@@ -35,7 +35,7 @@ def _parse_list_cell(x: Any) -> List[str]:
     return []
 
 
-def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.DataFrame:
+def basic_clean(df: pd.DataFrame, clean: Dict[str, Any]) -> pd.DataFrame:
     df = df.copy()
 
     threshold = float(clean.get("threshold_missing", 0.3))
@@ -130,9 +130,7 @@ def split_data(
 def train_baseline(
     X_train: pd.DataFrame, y_train: pd.Series, model: Dict[str, Any]
 ) -> RandomForestRegressor:
-    run = wandb.init(
-        project="gamereviewratio", job_type="train", reinit=True, config=model
-    )
+    wandb.init(project="gamereviewratio", job_type="train", reinit=True, config=model)
     params = {
         "random_state": model.get("random_state", 42),
         "n_estimators": model.get("n_estimators", 200),

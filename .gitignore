@@ -28,6 +28,7 @@ data/**/README.md
 data/01_raw/top_500.csv
 .idea/
 wandb
+.viz
 
 # jeśli ktoś pracuje na Macu
 .DS_Store

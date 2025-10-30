@@ -1,6 +1,7 @@
 """gamereviewratio file for ensuring the package is executable
 as `gamereviewratio` and `python -m gamereviewratio`
 """
+
 import sys
 from pathlib import Path
 from typing import Any
