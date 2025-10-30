@@ -140,6 +140,11 @@ def train_baseline(
     }
     mdl = RandomForestRegressor(**params)
     mdl.fit(X_train, y_train)
+
+    art = wandb.Artifact("model_baseline", type="model")
+    art.add_file("data/06_models/model_baseline.pkl")
+    wandb.log_artifact(art)
+
     return mdl
 
 
