@@ -20,5 +20,6 @@ dependencies:
       - wandb
       - kedro
       - kedro-datasets[pandas]
+      - kedro-viz
       - pyarrow
       - pandera

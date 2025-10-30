@@ -10,3 +10,10 @@ Our target is the percentage of positive reviews, so RMSE allows better control 
 
 ### W&B: 
 https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio?nw=nwuserzurekjakub
+
+### Kedro quickstart:
+```
+kedro run
+```
+### Kedro pipeline
+![Kedro pipeline](images/kedro-pipeline.png)
