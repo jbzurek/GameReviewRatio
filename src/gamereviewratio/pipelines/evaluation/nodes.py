@@ -35,7 +35,7 @@ def _parse_list_cell(x: Any) -> List[str]:
     return []
 
 
-def basic_clean(df: pd.DataFrame, clean: Dict[str, Any]) -> pd.DataFrame:
+def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.DataFrame:
     df = df.copy()
 
     threshold = float(clean.get("threshold_missing", 0.3))
