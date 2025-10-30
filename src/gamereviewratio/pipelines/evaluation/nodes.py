@@ -11,13 +11,16 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import wandb
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
+
 
 def load_raw(raw_df: pd.DataFrame) -> pd.DataFrame:
     return raw_df
+
 
 def _parse_list_cell(x: Any) -> List[str]:
     if isinstance(x, list):
@@ -31,11 +34,8 @@ def _parse_list_cell(x: Any) -> List[str]:
             return [s.strip() for s in x.split(",") if s.strip()]
     return []
 
-def basic_clean(
-    df: pd.DataFrame,
-    clean: Dict[str, Any],
-    target: str,
-) -> pd.DataFrame:
+
+def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.DataFrame:
     df = df.copy()
 
     threshold = float(clean.get("threshold_missing", 0.3))
@@ -99,6 +99,7 @@ def basic_clean(
 
     return df
 
+
 def split_data(
     df: pd.DataFrame,
     target: str,
@@ -112,7 +113,6 @@ def split_data(
 
     y = pd.to_numeric(df[target], errors="coerce")
     X = df.drop(columns=[target])
-
     X = pd.get_dummies(X, drop_first=True)
 
     mask = y.notnull()
@@ -126,11 +126,13 @@ def split_data(
     y_test_df = y_test.to_frame(name=target)
     return X_train, X_test, y_train_df, y_test_df
 
+
 def train_baseline(
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    model: Dict[str, Any],
+    X_train: pd.DataFrame, y_train: pd.Series, model: Dict[str, Any]
 ) -> RandomForestRegressor:
+    run = wandb.init(
+        project="gamereviewratio", job_type="train", reinit=True, config=model
+    )
     params = {
         "random_state": model.get("random_state", 42),
         "n_estimators": model.get("n_estimators", 200),
@@ -140,16 +142,19 @@ def train_baseline(
     mdl.fit(X_train, y_train)
     return mdl
 
-def evaluate(
-    mdl: RandomForestRegressor,
-    X_test: pd.DataFrame,
-    y_test: pd.DataFrame | pd.Series,
-) -> pd.DataFrame:
-    if isinstance(y_test, pd.DataFrame):
-        y_true = pd.to_numeric(y_test.iloc[:, 0], errors="coerce")
-    else:
-        y_true = pd.to_numeric(y_test, errors="coerce")
 
+def evaluate(
+    mdl: RandomForestRegressor, X_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
+) -> pd.DataFrame:
+    y_true = (
+        pd.to_numeric(y_test.iloc[:, 0], errors="coerce")
+        if isinstance(y_test, pd.DataFrame)
+        else pd.to_numeric(y_test, errors="coerce")
+    )
     y_pred = mdl.predict(X_test)
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+    try:
+        wandb.log({"rmse": rmse})
+    except Exception:
+        pass
     return pd.DataFrame({"rmse": [rmse]})

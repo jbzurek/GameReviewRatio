@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gamereviewratio"
+version = "0.1.0"
+requires-python = ">=3.9"
+readme = "README.md"
+dependencies = [
+  "kedro~=1.0.0",
+  "kedro-datasets[pandas]",
+  "pyarrow",
+  "scikit-learn",
+  "wandb",
+  "ipython>=8.10",
+  "jupyterlab>=3.0",
+  "notebook",
+]
+
+[project.scripts]
+gamereviewratio = "gamereviewratio.__main__:main"
+
+[project.entry-points."kedro.hooks"]
+
+[tool.kedro]
+package_name = "gamereviewratio"
+project_name = "GameReviewRatio"
+kedro_init_version = "1.0.0"
+tools = "['None']"
+example_pipeline = "False"
+source_dir = "src"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.kedro_telemetry]
+project_id = "7b2df4cc7ddc4016a241985b83b3d7ec"

@@ -1,9 +1,5 @@
-# Parameters for evaluation pipeline
-
-# target column for regression RMSE
 target: pct_pos_total
 
-# cleaning configuration aligned with notebook 01_eda
 clean:
   threshold_missing: 0.3
   bin_flag_cols:
@@ -34,15 +30,12 @@ clean:
     - full_audio_languages
   top_n_labels: 50
 
-# train/test split
 split:
   test_size: 0.2
   random_state: 42
 
-# baseline model
 model:
   random_state: 42
   n_estimators: 200
   n_jobs: -1
   kind: "rf"
-
