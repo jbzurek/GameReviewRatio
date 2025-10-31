@@ -1,19 +1,39 @@
 # Game Review Ratio
 
-https://www.kaggle.com/datasets/artermiloff/steam-games-dataset?resource=download\&select=games\_march2025\_full.csv
+Dane: [Steam Games Dataset (Kaggle)](https://www.kaggle.com/datasets/artermiloff/steam-games-dataset?resource=download&select=games_march2025_full.csv)  
+**Licencja:** MIT  
+**Data pobrania:** 07.10.2025 r.
 
-Released under MIT License Downloaded - 07.10.2025 r.
+---
 
-### Selected metric: RMSE
+### Cel projektu
+Celem projektu jest predykcja odsetka pozytywnych recenzji gier (pct_pos_total) na podstawie danych o grach dostępnych na platformie Steam.  
+Projekt został zrealizowany z użyciem frameworka Kedro, a eksperymenty śledzone są w Weights & Biases (W&B).
 
-Our target is the percentage of positive reviews, so RMSE allows better control over large prediction errors for games with unusual results. Since the error function squares the difference between the predicted and actual values, RMSE penalizes large errors more strongly than small ones.
+---
 
-### W&B:
-https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio?nw=nwuserzurekjakub
+### Wybrana metryka: RMSE
+Metryka RMSE (Root Mean Squared Error) została wybrana, ponieważ silniej karze duże błędy predykcji.  
+Dzięki temu lepiej uwzględnia gry o nietypowych wynikach i poprawia ocenę jakości modelu regresyjnego.
 
-### Kedro quickstart:
+---
+
+### Weights & Biases
+Monitorowanie eksperymentów i wyników:  
+[W&B Dashboard – GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
+
+---
+
+### Uruchomienie pipeline’u Kedro
+Aby uruchomić cały pipeline:
 ```
 kedro run
 ```
-### Kedro pipeline
-![Kedro pipeline](images/kedro-pipeline.png)
+
+---
+
+### Struktura pipeline’u
+
+Poniżej znajduje się wizualizacja przepływu danych i zadań w projekcie:
+
+<p align="center"> <img src="images/kedro-pipeline.svg" alt="Kedro pipeline" width="70%"> </p>

@@ -5,29 +5,36 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gamereviewratio"
 version = "0.1.0"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
   "kedro~=1.0.0",
   "kedro-datasets[pandas]",
+  "kedro-datasets[tracking]",
   "pyarrow",
   "scikit-learn",
   "wandb",
+]
+
+[project.optional-dependencies]
+dev = [
   "ipython>=8.10",
   "jupyterlab>=3.0",
-  "notebook",
+  "pytest",
+  "black",
+  "ruff",
+  "pre-commit",
+  "kedro-viz",
 ]
 
 [project.scripts]
 gamereviewratio = "gamereviewratio.__main__:main"
 
-[project.entry-points."kedro.hooks"]
-
 [tool.kedro]
 package_name = "gamereviewratio"
 project_name = "GameReviewRatio"
 kedro_init_version = "1.0.0"
-tools = "['None']"
+tools = []
 example_pipeline = "False"
 source_dir = "src"
 
