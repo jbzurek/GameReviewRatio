@@ -128,27 +128,54 @@ def split_data(
 
 
 def train_baseline(
-    X_train: pd.DataFrame, y_train: pd.Series, model: Dict[str, Any]
+    X_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
 ) -> RandomForestRegressor:
-    wandb.init(project="gamereviewratio", job_type="train", reinit=True, config=model)
+
+    import time
+    from pathlib import Path
+
+    # inicjalizacja W&B
+    wandb.init(
+        project="gamereviewratio",
+        job_type="train",
+        reinit=True,
+        config=model,
+    )
+
+    if isinstance(y_train, pd.DataFrame):
+        y_train = y_train.squeeze()
+    y_train = y_train.to_numpy().ravel()
+
+    # parametry modelu
     params = {
         "random_state": model.get("random_state", 42),
         "n_estimators": model.get("n_estimators", 200),
         "n_jobs": model.get("n_jobs", -1),
     }
+
+    # trening modelu
     mdl = RandomForestRegressor(**params)
     mdl.fit(X_train, y_train)
 
-    art = wandb.Artifact("model_baseline", type="model")
-    art.add_file("data/06_models/model_baseline.pkl")
-    wandb.log_artifact(art)
+    # logowanie artefaktu
+    model_path = Path("data/06_models/model_baseline.pkl")
+    for _ in range(20):
+        if model_path.exists():
+            try:
+                art = wandb.Artifact("model_baseline", type="model")
+                art.add_file(str(model_path))
+                wandb.log_artifact(art)
+            except Exception:
+                pass
+            break
+        time.sleep(0.25)
 
     return mdl
 
 
 def evaluate(
     mdl: RandomForestRegressor, X_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
-) -> pd.DataFrame:
+) -> dict:
     y_true = (
         pd.to_numeric(y_test.iloc[:, 0], errors="coerce")
         if isinstance(y_test, pd.DataFrame)
@@ -160,4 +187,4 @@ def evaluate(
         wandb.log({"rmse": rmse})
     except Exception:
         pass
-    return pd.DataFrame({"rmse": [rmse]})
+    return {"rmse": rmse}

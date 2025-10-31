@@ -5,7 +5,7 @@
 
 raw_data:
   type: kedro_datasets.pandas.CSVDataset
-  filepath: data/01_raw/top_500.csv
+  filepath: data/01_raw/sample_100.csv
   load_args:
     encoding: utf-8
     low_memory: false
@@ -36,10 +36,6 @@ baseline_model:
   type: kedro_datasets.pickle.PickleDataset
   filepath: data/06_models/model_baseline.pkl
 
-rf_metrics:
-  type: kedro_datasets.pandas.CSVDataset
-  filepath: data/09_tracking/rf_metrics.csv
-
 metrics_baseline:
-  type: kedro_datasets.json.JSONDataset
+  type: kedro_datasets.tracking.MetricsDataset
   filepath: data/09_tracking/metrics_baseline.json

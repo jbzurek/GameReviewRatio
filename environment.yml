@@ -20,6 +20,7 @@ dependencies:
       - wandb
       - kedro
       - kedro-datasets[pandas]
+      - kedro-datasets[tracking]==2.*
       - kedro-viz
       - pyarrow
       - pandera

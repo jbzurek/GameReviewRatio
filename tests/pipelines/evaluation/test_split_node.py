@@ -2,7 +2,7 @@ import pandas as pd
 from gamereviewratio.pipelines.evaluation.nodes import split_data
 
 
-def test_split_returns_y_as_dataframe_and_no_target_in_X():
+def test_split_returns_y_as_dataframe_and_no_target_in_x():
     df = pd.DataFrame(
         {"f1": [1, 2, 3, 4, 5], "pct_pos_total": [0.1, 0.2, 0.3, 0.4, 0.5]}
     )

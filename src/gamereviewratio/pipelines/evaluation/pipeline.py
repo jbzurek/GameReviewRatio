@@ -27,7 +27,7 @@ def create_pipeline() -> Pipeline:
             node(
                 evaluate,
                 ["baseline_model", "X_test", "y_test"],
-                "rf_metrics",
+                "metrics_baseline",
                 name="evaluate",
             ),
         ]
