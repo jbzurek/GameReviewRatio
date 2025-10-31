@@ -1,34 +1,34 @@
-# Python
+# Python / build artefacts
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 *.egg-info/
-.build/
+build/
 dist/
+*.log
 
 # Jupyter
 .ipynb_checkpoints/
 
-# Envs / secrets
+# Virtual envs / secrets
 .env
 .env.*
 *.env
+.venv/
+venv/
 
-# Data (nie ładujemy pełnych danych, tylko małe próbki danych)
-data/*
-!data/01_raw/
-!data/02_interim/
-!data/03_processed/
-data/**/.gitkeep
-data/**/README.md
-!data/01_raw/sample.csv
+# Kedro data folders
+data/**/*
+!data/**/.gitkeep
+!data/**/README.md
+!data/01_raw/sample_100.csv
 
-# custom
-data/01_raw/top_500.csv
+# IDE / OS
 .idea/
-
-# jeśli ktoś pracuje na Macu
+.vscode/
 .DS_Store
 Thumbs.db
-*.csv
+
+# W&B, Kedro Viz, cache
+wandb/
+.viz/
+.kedro/

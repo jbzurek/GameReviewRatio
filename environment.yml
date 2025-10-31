@@ -1,20 +1,29 @@
 name: asi-ml
+
 channels:
   - conda-forge
   - defaults
+
 dependencies:
   - python=3.11
-  - jupyterlab
   - ipykernel
+  - jupyterlab
+  - matplotlib
   - numpy
   - pandas
-  - seaborn
+  - pyarrow
   - scikit-learn
-  - matplotlib
+  - seaborn
+  - pandera
   - pip
+
   - pip:
-      - pre-commit
-      - ruff
       - black
+      - kedro
+      - kedro-datasets[pandas]
+      - kedro-datasets[tracking]==2.*
+      - kedro-viz
+      - pre-commit
       - pytest
+      - ruff
       - wandb

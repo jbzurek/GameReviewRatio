@@ -1,0 +1,41 @@
+# Here you can define all your datasets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+
+raw_data:
+  type: kedro_datasets.pandas.CSVDataset
+  filepath: data/01_raw/sample_100.csv
+  load_args:
+    encoding: utf-8
+    low_memory: false
+
+clean_df:
+  type: kedro_datasets.pandas.ParquetDataset
+  filepath: data/02_interim/clean.parquet
+
+X_train:
+  type: kedro_datasets.pandas.ParquetDataset
+  filepath: data/03_processed/X_train.parquet
+X_test:
+  type: kedro_datasets.pandas.ParquetDataset
+  filepath: data/03_processed/X_test.parquet
+
+y_train:
+  type: kedro_datasets.pandas.ParquetDataset
+  filepath: data/03_processed/y_train.parquet
+  save_args:
+    index: true
+y_test:
+  type: kedro_datasets.pandas.ParquetDataset
+  filepath: data/03_processed/y_test.parquet
+  save_args:
+    index: true
+
+baseline_model:
+  type: kedro_datasets.pickle.PickleDataset
+  filepath: data/06_models/model_baseline.pkl
+
+metrics_baseline:
+  type: kedro_datasets.tracking.MetricsDataset
+  filepath: data/09_tracking/metrics_baseline.json
