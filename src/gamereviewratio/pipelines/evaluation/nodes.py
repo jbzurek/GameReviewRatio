@@ -1,7 +1,6 @@
 """
 This is a boilerplate pipeline 'evaluation'
 generated using Kedro 1.0.0
-
 """
 
 from __future__ import annotations
@@ -112,23 +111,23 @@ def split_data(
         raise ValueError(f"Target '{target}' not in dataframe")
 
     y = pd.to_numeric(df[target], errors="coerce")
-    X = df.drop(columns=[target])
-    X = pd.get_dummies(X, drop_first=True)
+    x = df.drop(columns=[target])
+    x = pd.get_dummies(x, drop_first=True)
 
     mask = y.notnull()
-    X = X.loc[mask]
+    x = x.loc[mask]
     y = y.loc[mask]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=test_size, random_state=random_state
     )
     y_train_df = y_train.to_frame(name=target)
     y_test_df = y_test.to_frame(name=target)
-    return X_train, X_test, y_train_df, y_test_df
+    return x_train, x_test, y_train_df, y_test_df
 
 
 def train_baseline(
-    X_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
+    x_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
 ) -> RandomForestRegressor:
 
     import time
@@ -155,7 +154,7 @@ def train_baseline(
 
     # trening modelu
     mdl = RandomForestRegressor(**params)
-    mdl.fit(X_train, y_train)
+    mdl.fit(x_train, y_train)
 
     # logowanie artefaktu
     model_path = Path("data/06_models/model_baseline.pkl")
@@ -174,14 +173,14 @@ def train_baseline(
 
 
 def evaluate(
-    mdl: RandomForestRegressor, X_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
+    mdl: RandomForestRegressor, x_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
 ) -> dict:
     y_true = (
         pd.to_numeric(y_test.iloc[:, 0], errors="coerce")
         if isinstance(y_test, pd.DataFrame)
         else pd.to_numeric(y_test, errors="coerce")
     )
-    y_pred = mdl.predict(X_test)
+    y_pred = mdl.predict(x_test)
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
     try:
         wandb.log({"rmse": rmse})
