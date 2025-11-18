@@ -14,12 +14,12 @@ clean_df:
   type: kedro_datasets.pandas.ParquetDataset
   filepath: data/02_interim/clean.parquet
 
-X_train:
+x_train:
   type: kedro_datasets.pandas.ParquetDataset
-  filepath: data/03_processed/X_train.parquet
-X_test:
+  filepath: data/03_processed/x_train.parquet
+x_test:
   type: kedro_datasets.pandas.ParquetDataset
-  filepath: data/03_processed/X_test.parquet
+  filepath: data/03_processed/x_test.parquet
 
 y_train:
   type: kedro_datasets.pandas.ParquetDataset

@@ -6,8 +6,10 @@ generated using Kedro 1.0.0
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import joblib
 import numpy as np
 import pandas as pd
 import wandb
@@ -24,13 +26,26 @@ def load_raw(raw_df: pd.DataFrame) -> pd.DataFrame:
 def _parse_list_cell(x: Any) -> List[str]:
     if isinstance(x, list):
         return x
+
     if isinstance(x, str):
+        x_str = x.strip()
+        if not x_str:
+            return []
+
         try:
-            val = ast.literal_eval(x)
+            val = ast.literal_eval(x_str)
+
             if isinstance(val, list):
                 return val
+
+            if isinstance(val, dict):
+                return list(val.keys())
+
         except Exception:
-            return [s.strip() for s in x.split(",") if s.strip()]
+            pass
+
+        return [s.strip() for s in x_str.split(",") if s.strip()]
+
     return []
 
 
@@ -44,8 +59,10 @@ def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.Data
     mlb_cols: List[str] = list(clean.get("mlb_cols", []))
     top_n: int = int(clean.get("top_n_labels", 50))
 
-    to_drop = []
+    to_drop: List[str] = []
     for col in df.columns:
+        if col == target:
+            continue
         if df[col].isnull().mean() > threshold:
             to_drop.append(col)
     if to_drop:
@@ -77,16 +94,20 @@ def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.Data
     for col in mlb_cols:
         if col not in df.columns:
             continue
+
         series = df[col].apply(_parse_list_cell)
         counts: Dict[str, int] = {}
         for lst in series.dropna():
             for lab in lst:
                 counts[lab] = counts.get(lab, 0) + 1
+
         top_labels = sorted(counts, key=counts.get, reverse=True)[:top_n]
         top_set = set(top_labels)
+
         if not top_set:
             df.drop(columns=[col], inplace=True)
             continue
+
         series_top = series.apply(lambda lst: [x for x in lst if x in top_set])
         mlb = MultiLabelBinarizer(classes=sorted(top_set))
         encoded = pd.DataFrame(
@@ -103,7 +124,7 @@ def split_data(
     df: pd.DataFrame,
     target: str,
     split: Dict[str, Any],
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     test_size = float(split.get("test_size", 0.2))
     random_state = int(split.get("random_state", 42))
 
@@ -121,6 +142,7 @@ def split_data(
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=test_size, random_state=random_state
     )
+
     y_train_df = y_train.to_frame(name=target)
     y_test_df = y_test.to_frame(name=target)
     return x_train, x_test, y_train_df, y_test_df
@@ -129,11 +151,6 @@ def split_data(
 def train_baseline(
     x_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
 ) -> RandomForestRegressor:
-
-    import time
-    from pathlib import Path
-
-    # inicjalizacja W&B
     wandb.init(
         project="gamereviewratio",
         job_type="train",
@@ -145,29 +162,25 @@ def train_baseline(
         y_train = y_train.squeeze()
     y_train = y_train.to_numpy().ravel()
 
-    # parametry modelu
     params = {
         "random_state": model.get("random_state", 42),
         "n_estimators": model.get("n_estimators", 200),
         "n_jobs": model.get("n_jobs", -1),
     }
 
-    # trening modelu
     mdl = RandomForestRegressor(**params)
     mdl.fit(x_train, y_train)
 
-    # logowanie artefaktu
     model_path = Path("data/06_models/model_baseline.pkl")
-    for _ in range(20):
-        if model_path.exists():
-            try:
-                art = wandb.Artifact("model_baseline", type="model")
-                art.add_file(str(model_path))
-                wandb.log_artifact(art)
-            except Exception:
-                pass
-            break
-        time.sleep(0.25)
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(mdl, model_path)
+
+    try:
+        art = wandb.Artifact("model_baseline", type="model")
+        art.add_file(str(model_path))
+        wandb.log_artifact(art)
+    except Exception:
+        pass
 
     return mdl
 
@@ -175,15 +188,22 @@ def train_baseline(
 def evaluate(
     mdl: RandomForestRegressor, x_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
 ) -> dict:
-    y_true = (
-        pd.to_numeric(y_test.iloc[:, 0], errors="coerce")
-        if isinstance(y_test, pd.DataFrame)
-        else pd.to_numeric(y_test, errors="coerce")
-    )
-    y_pred = mdl.predict(x_test)
+    if isinstance(y_test, pd.DataFrame):
+        y_true = y_test.iloc[:, 0]
+    else:
+        y_true = y_test
+
+    y_true = pd.to_numeric(y_true, errors="coerce")
+    mask = y_true.notnull()
+    y_true = y_true[mask]
+    x_eval = x_test.loc[mask]
+
+    y_pred = mdl.predict(x_eval)
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+
     try:
         wandb.log({"rmse": rmse})
     except Exception:
         pass
+
     return {"rmse": rmse}

@@ -15,18 +15,18 @@ def create_pipeline() -> Pipeline:
             node(
                 split_data,
                 ["clean_df", "params:target", "params:split"],
-                ["X_train", "X_test", "y_train", "y_test"],
+                ["x_train", "x_test", "y_train", "y_test"],
                 name="split_data",
             ),
             node(
                 train_baseline,
-                ["X_train", "y_train", "params:model"],
+                ["x_train", "y_train", "params:model"],
                 "baseline_model",
                 name="train_baseline",
             ),
             node(
                 evaluate,
-                ["baseline_model", "X_test", "y_test"],
+                ["baseline_model", "x_test", "y_test"],
                 "metrics_baseline",
                 name="evaluate",
             ),
