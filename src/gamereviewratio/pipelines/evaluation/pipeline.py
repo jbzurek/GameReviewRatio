@@ -1,5 +1,13 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import load_raw, basic_clean, split_data, train_baseline, evaluate
+from .nodes import (
+    load_raw,
+    basic_clean,
+    split_data,
+    train_baseline,
+    evaluate,
+    train_autogluon,
+    evaluate_autogluon,
+)
 
 
 def create_pipeline() -> Pipeline:
@@ -17,6 +25,18 @@ def create_pipeline() -> Pipeline:
                 ["clean_df", "params:target", "params:split"],
                 ["x_train", "x_test", "y_train", "y_test"],
                 name="split_data",
+            ),
+            node(
+                train_autogluon,
+                ["x_train", "y_train", "params:autogluon"],
+                "ag_model",
+                name="train_autogluon",
+            ),
+            node(
+                evaluate_autogluon,
+                ["ag_model", "x_test", "y_test"],
+                "ag_metrics",
+                name="evaluate_autogluon",
             ),
             node(
                 train_baseline,

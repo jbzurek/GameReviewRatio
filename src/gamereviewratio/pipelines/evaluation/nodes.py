@@ -13,10 +13,12 @@ import joblib
 import numpy as np
 import pandas as pd
 import wandb
+import time
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
+from autogluon.tabular import TabularPredictor
 
 
 def load_raw(raw_df: pd.DataFrame) -> pd.DataFrame:
@@ -206,4 +208,122 @@ def evaluate(
     except Exception:
         pass
 
+    try:
+        wandb.finish()
+    except Exception:
+        pass
+
     return {"rmse": rmse}
+
+
+def train_autogluon(
+    x_train: pd.DataFrame,
+    y_train: pd.DataFrame | pd.Series,
+    ag_params: dict,
+) -> TabularPredictor:
+    label = ag_params.get("label")
+    problem_type = ag_params.get("problem_type", "regression")
+    eval_metric = ag_params.get("eval_metric", "rmse")
+    time_limit = int(ag_params.get("time_limit", 60))
+    presets = ag_params.get("presets", "medium_quality_faster_train")
+    random_state = int(ag_params.get("random_state", 42))
+
+    if isinstance(y_train, pd.DataFrame):
+        y_series = y_train.iloc[:, 0]
+    else:
+        y_series = y_train
+
+    train_df = x_train.copy()
+    train_df[label] = pd.to_numeric(y_series, errors="coerce")
+
+    train_df = train_df.dropna(subset=[label])
+
+    wandb_config = {
+        "label": label,
+        "problem_type": problem_type,
+        "eval_metric": eval_metric,
+        "time_limit": time_limit,
+        "presets": presets,
+        "random_state": random_state,
+    }
+    wandb_config.update(
+        {f"feature_{col}": str(train_df[col].dtype) for col in x_train.columns}
+    )
+
+    wandb.init(
+        project="gamereviewratio",
+        job_type="ag-train",
+        reinit=True,
+        config=wandb_config,
+    )
+
+    start_time = time.time()
+
+    predictor = TabularPredictor(
+        label=label,
+        problem_type=problem_type,
+        eval_metric=eval_metric,
+        verbosity=2,
+    ).fit(
+        train_data=train_df,
+        time_limit=time_limit,
+        presets=presets,
+    )
+
+    train_time_s = time.time() - start_time
+
+    output_path = Path("data/06_models")
+    output_path.mkdir(parents=True, exist_ok=True)
+    predictor.save(str(output_path))
+
+    pkl_path = Path("data/06_models/ag_production.pkl")
+    joblib.dump(predictor, pkl_path)
+
+    try:
+        wandb.log({"train_time_s": train_time_s})
+    except Exception:
+        pass
+
+    try:
+        art = wandb.Artifact("ag_model", type="model")
+        art.add_file(str(pkl_path))
+        wandb.log_artifact(art, aliases=["candidate"])
+    except Exception:
+        pass
+
+    return predictor
+
+
+def evaluate_autogluon(
+    predictor: TabularPredictor,
+    x_test: pd.DataFrame,
+    y_test: pd.DataFrame | pd.Series,
+    ag_params: dict,
+) -> Dict[str, float]:
+
+    if isinstance(y_test, pd.DataFrame):
+        y_true = y_test.iloc[:, 0]
+    else:
+        y_true = y_test
+
+    y_true = pd.to_numeric(y_true, errors="coerce")
+    mask = y_true.notnull()
+    y_true = y_true[mask]
+    x_eval = x_test.loc[mask]
+
+    y_pred = predictor.predict(x_eval)
+
+    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+    metrics = {"rmse": rmse}
+
+    try:
+        wandb.log(metrics)
+    except Exception:
+        pass
+
+    try:
+        wandb.finish()
+    except Exception:
+        pass
+
+    return metrics

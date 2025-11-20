@@ -39,3 +39,11 @@ baseline_model:
 metrics_baseline:
   type: kedro_datasets.tracking.MetricsDataset
   filepath: data/09_tracking/metrics_baseline.json
+
+ag_model:
+  type: kedro_datasets.pickle.PickleDataset
+  filepath: data/06_models/ag_production.pkl
+
+ag_metrics:
+  type: kedro_datasets.tracking.MetricsDataset
+  filepath: data/09_tracking/ag_metrics.json

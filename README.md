@@ -1,25 +1,25 @@
 # Game Review Ratio
 
-Dane: [Steam Games Dataset (Kaggle)](https://www.kaggle.com/datasets/artermiloff/steam-games-dataset?resource=download&select=games_march2025_full.csv)  
-**Licencja:** MIT  
+Dane: [Steam Games Dataset (Kaggle)](https://www.kaggle.com/datasets/artermiloff/steam-games-dataset?resource=download&select=games_march2025_full.csv)
+**Licencja:** MIT
 **Data pobrania:** 07.10.2025 r.
 
 ---
 
 ### Cel projektu
-Celem projektu jest predykcja odsetka pozytywnych recenzji gier (pct_pos_total) na podstawie danych o grach dostępnych na platformie Steam.  
+Celem projektu jest predykcja odsetka pozytywnych recenzji gier (pct_pos_total) na podstawie danych o grach dostępnych na platformie Steam.
 Projekt został zrealizowany z użyciem frameworka Kedro, a eksperymenty śledzone są w Weights & Biases (W&B).
 
 ---
 
 ### Wybrana metryka: RMSE
-Metryka RMSE (Root Mean Squared Error) została wybrana, ponieważ silniej karze duże błędy predykcji.  
+Metryka RMSE (Root Mean Squared Error) została wybrana, ponieważ silniej karze duże błędy predykcji.
 Dzięki temu lepiej uwzględnia gry o nietypowych wynikach i poprawia ocenę jakości modelu regresyjnego.
 
 ---
 
 ### Weights & Biases
-Monitorowanie eksperymentów i wyników:  
+Monitorowanie eksperymentów i wyników:
 [W&B Dashboard – GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
 ---

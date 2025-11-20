@@ -18,6 +18,7 @@ dependencies:
   - pip
 
   - pip:
+      - autogluon.tabular==1.4.0
       - black
       - kedro
       - kedro-datasets[pandas]
@@ -29,3 +30,4 @@ dependencies:
       - wandb
 
   - joblib
+  - autogluon
