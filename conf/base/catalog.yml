@@ -17,6 +17,7 @@ clean_df:
 x_train:
   type: kedro_datasets.pandas.ParquetDataset
   filepath: data/03_processed/x_train.parquet
+
 x_test:
   type: kedro_datasets.pandas.ParquetDataset
   filepath: data/03_processed/x_test.parquet
@@ -26,6 +27,7 @@ y_train:
   filepath: data/03_processed/y_train.parquet
   save_args:
     index: true
+
 y_test:
   type: kedro_datasets.pandas.ParquetDataset
   filepath: data/03_processed/y_test.parquet
@@ -37,7 +39,7 @@ baseline_model:
   filepath: data/06_models/model_baseline.pkl
 
 metrics_baseline:
-  type: kedro_datasets.tracking.MetricsDataset
+  type: kedro_datasets.tracking.MetricsDataSet
   filepath: data/09_tracking/metrics_baseline.json
 
 ag_model:
@@ -45,5 +47,8 @@ ag_model:
   filepath: data/06_models/ag_production.pkl
 
 ag_metrics:
-  type: kedro_datasets.tracking.MetricsDataset
+  type: kedro_datasets.tracking.MetricsDataSet
   filepath: data/09_tracking/ag_metrics.json
+
+best_model_name:
+  type: MemoryDataset

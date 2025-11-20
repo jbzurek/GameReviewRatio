@@ -171,16 +171,24 @@ def train_baseline(
     }
 
     mdl = RandomForestRegressor(**params)
+
+    start_time = time.time()
     mdl.fit(x_train, y_train)
+    train_time_s = time.time() - start_time
 
     model_path = Path("data/06_models/model_baseline.pkl")
     model_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(mdl, model_path)
 
     try:
-        art = wandb.Artifact("model_baseline", type="model")
+        wandb.log({"train_time_s": train_time_s})
+    except Exception:
+        pass
+
+    try:
+        art = wandb.Artifact("baseline_model", type="model")
         art.add_file(str(model_path))
-        wandb.log_artifact(art)
+        wandb.log_artifact(art, aliases=["candidate"])
     except Exception:
         pass
 
@@ -221,12 +229,16 @@ def train_autogluon(
     y_train: pd.DataFrame | pd.Series,
     ag_params: dict,
 ) -> TabularPredictor:
+
     label = ag_params.get("label")
     problem_type = ag_params.get("problem_type", "regression")
     eval_metric = ag_params.get("eval_metric", "rmse")
     time_limit = int(ag_params.get("time_limit", 60))
     presets = ag_params.get("presets", "medium_quality_faster_train")
     random_state = int(ag_params.get("random_state", 42))
+
+    save_dir = Path("data/06_models/AutogluonModels")
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     if isinstance(y_train, pd.DataFrame):
         y_series = y_train.iloc[:, 0]
@@ -235,7 +247,6 @@ def train_autogluon(
 
     train_df = x_train.copy()
     train_df[label] = pd.to_numeric(y_series, errors="coerce")
-
     train_df = train_df.dropna(subset=[label])
 
     wandb_config = {
@@ -263,6 +274,7 @@ def train_autogluon(
         label=label,
         problem_type=problem_type,
         eval_metric=eval_metric,
+        path=str(save_dir),
         verbosity=2,
     ).fit(
         train_data=train_df,
@@ -271,10 +283,6 @@ def train_autogluon(
     )
 
     train_time_s = time.time() - start_time
-
-    output_path = Path("data/06_models")
-    output_path.mkdir(parents=True, exist_ok=True)
-    predictor.save(str(output_path))
 
     pkl_path = Path("data/06_models/ag_production.pkl")
     joblib.dump(predictor, pkl_path)
@@ -327,3 +335,13 @@ def evaluate_autogluon(
         pass
 
     return metrics
+
+def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
+    ag_rmse = ag_metrics.get("rmse", float("inf"))
+    base_rmse = baseline_metrics.get("rmse", float("inf"))
+
+    if ag_rmse <= base_rmse:
+        return "ag_model"
+    else:
+        return "baseline_model"
+
