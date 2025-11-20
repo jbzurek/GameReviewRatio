@@ -336,6 +336,7 @@ def evaluate_autogluon(
 
     return metrics
 
+
 def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
     ag_rmse = ag_metrics.get("rmse", float("inf"))
     base_rmse = baseline_metrics.get("rmse", float("inf"))
@@ -344,4 +345,3 @@ def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
         return "ag_model"
     else:
         return "baseline_model"
-

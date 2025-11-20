@@ -31,7 +31,7 @@ Docelowo użytkownik końcowy otrzyma: **API (FastAPI)** oraz **UI (Streamlit)**
 
 # **CEL I ZAKRES**
 
-Celem projektu jest trenowanie i porównywanie modeli przewidujących **pct_pos_total** (odsetek pozytywnych recenzji gier Steam).
+Celem projektu jest trenowanie i porównywanie modeli przewidujących `pct_pos_total` (odsetek pozytywnych recenzji gier Steam).
 Projekt przeznaczony jest dla zespołów data science i developerów chcących przeprowadzać automatyczne eksperymenty ML.
 
 **Ograniczenia:**
@@ -121,7 +121,7 @@ Diagram (Kedro-Viz):
 
 # **EKSPERYMENTY I WYNIKI (W&B)**
 
-Wszystkie eksperymenty widoczne są tutaj:  
+Wszystkie eksperymenty widoczne są tutaj:
 [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
 Logowane są:
@@ -190,8 +190,6 @@ Kluczowe zależności:
 ---
 
 # **DOCKER I DOCKER-COMPOSE**
-
-
 
 ---
 
@@ -279,4 +277,3 @@ images/
 * **Diagram potoku:** `images/kedro-pipeline.svg`
 
 ---
-
