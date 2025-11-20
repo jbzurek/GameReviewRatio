@@ -37,7 +37,7 @@ baseline_model:
   filepath: data/06_models/model_baseline.pkl
 
 metrics_baseline:
-  type: kedro_datasets.tracking.MetricsDataset
+  type: kedro_datasets.json.JSONDataset
   filepath: data/09_tracking/metrics_baseline.json
 
 ag_model:
@@ -45,5 +45,9 @@ ag_model:
   filepath: data/06_models/ag_production.pkl
 
 ag_metrics:
-  type: kedro_datasets.tracking.MetricsDataset
+  type: kedro_datasets.json.JSONDataset
   filepath: data/09_tracking/ag_metrics.json
+
+model_selection:
+  type: kedro_datasets.json.JSONDataset
+  filepath: data/09_tracking/model_selection.json

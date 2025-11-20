@@ -7,6 +7,7 @@ from .nodes import (
     evaluate,
     train_autogluon,
     evaluate_autogluon,
+    select_production_model,
 )
 
 
@@ -49,6 +50,12 @@ def create_pipeline() -> Pipeline:
                 ["baseline_model", "x_test", "y_test"],
                 "metrics_baseline",
                 name="evaluate",
+            ),
+            node(
+                select_production_model,
+                ["ag_metrics", "metrics_baseline", "params:selection"],
+                "model_selection",
+                name="select_production_model",
             ),
         ]
     )
