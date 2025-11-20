@@ -34,7 +34,7 @@ def create_pipeline() -> Pipeline:
             ),
             node(
                 evaluate_autogluon,
-                ["ag_model", "x_test", "y_test"],
+                ["ag_model", "x_test", "y_test", "params:autogluon"],
                 "ag_metrics",
                 name="evaluate_autogluon",
             ),
