@@ -7,7 +7,7 @@ from .nodes import (
     evaluate,
     train_autogluon,
     evaluate_autogluon,
-    select_production_model,
+    choose_best_model
 )
 
 

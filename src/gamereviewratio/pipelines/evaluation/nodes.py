@@ -171,9 +171,10 @@ def train_baseline(
     }
 
     mdl = RandomForestRegressor(**params)
-    start_train = time.time()
+
+    start_time = time.time()
     mdl.fit(x_train, y_train)
-    train_time_s = time.time() - start_train
+    train_time_s = time.time() - start_time
 
     model_path = Path("data/06_models/model_baseline.pkl")
     model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -185,7 +186,7 @@ def train_baseline(
         pass
 
     try:
-        art = wandb.Artifact("model_baseline", type="model")
+        art = wandb.Artifact("baseline_model", type="model")
         art.add_file(str(model_path))
         wandb.log_artifact(art, aliases=["candidate"])
     except Exception:
@@ -237,12 +238,16 @@ def train_autogluon(
     y_train: pd.DataFrame | pd.Series,
     ag_params: dict,
 ) -> TabularPredictor:
+
     label = ag_params.get("label")
     problem_type = ag_params.get("problem_type", "regression")
     eval_metric = ag_params.get("eval_metric", "rmse")
     time_limit = int(ag_params.get("time_limit", 60))
     presets = ag_params.get("presets", "medium_quality_faster_train")
     random_state = int(ag_params.get("random_state", 42))
+
+    save_dir = Path("data/06_models/AutogluonModels")
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     if isinstance(y_train, pd.DataFrame):
         y_series = y_train.iloc[:, 0]
@@ -251,7 +256,6 @@ def train_autogluon(
 
     train_df = x_train.copy()
     train_df[label] = pd.to_numeric(y_series, errors="coerce")
-
     train_df = train_df.dropna(subset=[label])
 
     wandb_config = {
