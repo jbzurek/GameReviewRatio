@@ -54,7 +54,7 @@ def create_pipeline() -> Pipeline:
             node(
                 select_production_model,
                 ["ag_metrics", "metrics_baseline", "params:selection"],
-                "model_selection",
+                "select_production_info",
                 name="select_production_model",
             ),
         ]

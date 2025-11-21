@@ -391,12 +391,9 @@ def select_production_model(
     elif _better(base_val, ag_val):
         chosen = "model_baseline"
     else:
-        # Remis - tie-breaker (niższa wartość lepsza jeśli to czas, załóżmy zawsze niższa lepsza dla tie-breakera)
         ag_tb = _safe_val(ag_metrics, tie_breaker)
         base_tb = _safe_val(baseline_metrics, tie_breaker)
         chosen = "ag_model" if ag_tb <= base_tb else "model_baseline"
-
-    # Wersjonowanie danych
     try:
         raw_path = Path(raw_dataset_path)
         if raw_path.exists():

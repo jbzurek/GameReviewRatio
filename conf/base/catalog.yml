@@ -51,3 +51,7 @@ ag_metrics:
 model_selection:
   type: kedro_datasets.json.JSONDataset
   filepath: data/09_tracking/model_selection.json
+
+select_production_info:
+  type: kedro_datasets.json.JSONDataset
+  filepath: data/09_tracking/select_production_info.json

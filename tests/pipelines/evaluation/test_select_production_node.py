@@ -31,4 +31,4 @@ def test_select_records_data_version():
         base,
         {"primary_metric": "rmse", "higher_is_better": False, "enable_wandb": False},
     )
-    assert "data_version" in info  # wersja danych powinna być zapisana
+    assert "data_version" in info
