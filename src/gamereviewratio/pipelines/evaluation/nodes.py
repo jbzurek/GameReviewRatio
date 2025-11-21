@@ -155,7 +155,7 @@ def train_baseline(
 ) -> RandomForestRegressor:
     wandb.init(
         project="gamereviewratio",
-        job_type="train",
+        job_type="train-baseline",
         reinit=True,
         config=model,
     )
@@ -208,11 +208,20 @@ def evaluate(
     y_true = y_true[mask]
     x_eval = x_test.loc[mask]
 
+    start_pred = time.time()
     y_pred = mdl.predict(x_eval)
+    inference_time_s = time.time() - start_pred
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
 
+    metrics = {"rmse": rmse, "inference_time_s": inference_time_s}
+
     try:
-        wandb.log({"rmse": rmse})
+        Path("data/09_tracking").mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+    try:
+        wandb.log(metrics)
     except Exception:
         pass
 
@@ -221,7 +230,7 @@ def evaluate(
     except Exception:
         pass
 
-    return {"rmse": rmse}
+    return metrics
 
 
 def train_autogluon(
@@ -270,34 +279,47 @@ def train_autogluon(
 
     start_time = time.time()
 
-    predictor = TabularPredictor(
-        label=label,
-        problem_type=problem_type,
-        eval_metric=eval_metric,
-        path=str(save_dir),
-        verbosity=2,
-    ).fit(
-        train_data=train_df,
-        time_limit=time_limit,
-        presets=presets,
-    )
+    predictor = None
+    try:
+        predictor = TabularPredictor(
+            label=label,
+            problem_type=problem_type,
+            eval_metric=eval_metric,
+            verbosity=2,
+        ).fit(
+            train_data=train_df,
+            time_limit=time_limit,
+            presets=presets,
+            hyperparameters={
+                "GBM": {},  # LightGBM
+                "RF": [{"criterion": "squared_error"}],
+            },
+            raise_on_no_models_fitted=False,
+        )
+    except Exception:
+        predictor = None
 
     train_time_s = time.time() - start_time
 
-    pkl_path = Path("data/06_models/ag_production.pkl")
-    joblib.dump(predictor, pkl_path)
+    if predictor is not None:
+        output_path = Path("data/06_models")
+        output_path.mkdir(parents=True, exist_ok=True)
+        predictor.save(str(output_path))
+        pkl_path = Path("data/06_models/ag_production.pkl")
+        joblib.dump(predictor, pkl_path)
 
     try:
         wandb.log({"train_time_s": train_time_s})
     except Exception:
         pass
 
-    try:
-        art = wandb.Artifact("ag_model", type="model")
-        art.add_file(str(pkl_path))
-        wandb.log_artifact(art, aliases=["candidate"])
-    except Exception:
-        pass
+    if predictor is not None:
+        try:
+            art = wandb.Artifact("ag_model", type="model")
+            art.add_file(str(pkl_path))
+            wandb.log_artifact(art, aliases=["candidate"])
+        except Exception:
+            pass
 
     return predictor
 
@@ -308,7 +330,6 @@ def evaluate_autogluon(
     y_test: pd.DataFrame | pd.Series,
     ag_params: dict,
 ) -> Dict[str, float]:
-
     if isinstance(y_test, pd.DataFrame):
         y_true = y_test.iloc[:, 0]
     else:
@@ -319,10 +340,17 @@ def evaluate_autogluon(
     y_true = y_true[mask]
     x_eval = x_test.loc[mask]
 
+    start_pred = time.time()
     y_pred = predictor.predict(x_eval)
+    inference_time_s = time.time() - start_pred
 
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-    metrics = {"rmse": rmse}
+    metrics = {"rmse": rmse, "inference_time_s": inference_time_s}
+
+    try:
+        Path("data/09_tracking").mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
 
     try:
         wandb.log(metrics)
@@ -336,12 +364,90 @@ def evaluate_autogluon(
 
     return metrics
 
-def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
-    ag_rmse = ag_metrics.get("rmse", float("inf"))
-    base_rmse = baseline_metrics.get("rmse", float("inf"))
 
-    if ag_rmse <= base_rmse:
-        return "ag_model"
+def select_production_model(
+    ag_metrics: Dict[str, Any],
+    baseline_metrics: Dict[str, Any],
+    selection_params: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    params = selection_params or {}
+    primary_metric = params.get("primary_metric", "rmse")
+    tie_breaker = params.get("tie_breaker", "inference_time_s")
+    higher_is_better = bool(params.get("higher_is_better", False))
+    enable_wandb = bool(params.get("enable_wandb", True))
+    raw_dataset_path = params.get("raw_dataset_path", "data/01_raw/sample_100.csv")
+
+    def _safe_val(d: Dict[str, Any], key: str) -> float:
+        v = d.get(key)
+        try:
+            return float(v)
+        except Exception:
+            return float("inf") if not higher_is_better else float("-inf")
+
+    ag_val = _safe_val(ag_metrics, primary_metric)
+    base_val = _safe_val(baseline_metrics, primary_metric)
+
+    def _better(a: float, b: float) -> bool:
+        return a > b if higher_is_better else a < b
+
+    if _better(ag_val, base_val):
+        chosen = "ag_model"
+    elif _better(base_val, ag_val):
+        chosen = "model_baseline"
     else:
-        return "baseline_model"
+        ag_tb = _safe_val(ag_metrics, tie_breaker)
+        base_tb = _safe_val(baseline_metrics, tie_breaker)
+        chosen = "ag_model" if ag_tb <= base_tb else "model_baseline"
+    try:
+        raw_path = Path(raw_dataset_path)
+        if raw_path.exists():
+            data_version = time.strftime(
+                "%Y-%m-%dT%H:%M:%SZ", time.gmtime(raw_path.stat().st_mtime)
+            )
+        else:
+            data_version = "missing"
+    except Exception:
+        data_version = "error"
 
+    info = {
+        "primary_metric": primary_metric,
+        "tie_breaker": tie_breaker,
+        "higher_is_better": higher_is_better,
+        "ag_metrics": ag_metrics,
+        "baseline_metrics": baseline_metrics,
+        "chosen_model": chosen,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "data_version": data_version,
+    }
+
+    if enable_wandb:
+        try:
+            wandb.init(
+                project="gamereviewratio",
+                job_type="select-production",
+                reinit=True,
+                config={
+                    "primary_metric": primary_metric,
+                    "tie_breaker": tie_breaker,
+                    "higher_is_better": higher_is_better,
+                    "data_version": data_version,
+                },
+            )
+            from wandb import Api
+
+            api = Api()
+            artifact_name = "ag_model" if chosen == "ag_model" else "model_baseline"
+            candidate_ref = f"{artifact_name}:candidate"
+            try:
+                art = api.artifact(candidate_ref)
+            except Exception:
+                art = api.artifact(f"{artifact_name}:latest")
+            if art is not None and "production" not in art.aliases:
+                art.aliases.append("production")
+                art.save()
+            wandb.log({"chosen_model": chosen})
+            wandb.finish()
+        except Exception:
+            pass
+
+    return info

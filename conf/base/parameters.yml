@@ -53,3 +53,10 @@ autogluon:
   label: pct_pos_total
   eval_metric: "rmse"
   random_state: 42
+
+selection:
+  primary_metric: rmse
+  tie_breaker: inference_time_s   # metryka remis
+  higher_is_better: false         # dla rmse false
+  enable_wandb: true              # pozwala wyłączyć logowanie W&B w testach
+  raw_dataset_path: data/01_raw/sample_100.csv  # do wersjonowania danych

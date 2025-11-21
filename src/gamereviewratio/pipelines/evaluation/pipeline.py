@@ -52,10 +52,10 @@ def create_pipeline() -> Pipeline:
                 name="evaluate",
             ),
             node(
-                choose_best_model,
-                ["ag_metrics", "metrics_baseline"],
-                "best_model_name",
-                name="choose_best_model",
+                select_production_model,
+                ["ag_metrics", "metrics_baseline", "params:selection"],
+                "select_production_info",
+                name="select_production_model",
             ),
         ]
     )
