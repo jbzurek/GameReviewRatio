@@ -8,6 +8,8 @@ from .nodes import (
     train_autogluon,
     evaluate_autogluon,
     choose_best_model,
+    log_ag_metrics,
+    log_baseline_metrics,
 )
 
 
@@ -35,9 +37,15 @@ def create_pipeline() -> Pipeline:
             ),
             node(
                 evaluate_autogluon,
-                ["ag_model", "x_test", "y_test", "params:autogluon"],
-                "ag_metrics",
+                ["ag_model", "x_test", "y_test"],
+                "ag_metrics_local",
                 name="evaluate_autogluon",
+            ),
+            node(
+                log_ag_metrics,
+                "ag_metrics_local",
+                "ag_metrics",
+                name="log_ag_metrics",
             ),
             node(
                 train_baseline,
@@ -48,12 +56,18 @@ def create_pipeline() -> Pipeline:
             node(
                 evaluate,
                 ["baseline_model", "x_test", "y_test"],
-                "metrics_baseline",
+                "metrics_baseline_local",
                 name="evaluate",
             ),
             node(
+                log_baseline_metrics,
+                "metrics_baseline_local",
+                "metrics_baseline",
+                name="log_baseline_metrics",
+            ),
+            node(
                 choose_best_model,
-                ["ag_metrics", "metrics_baseline"],
+                ["ag_metrics_local", "metrics_baseline_local"],
                 "best_model_name",
                 name="choose_best_model",
             ),

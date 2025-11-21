@@ -119,20 +119,64 @@ Diagram (Kedro-Viz):
 
 ---
 
+Poniżej masz **gotowy, kompletny i zwięzły dopisek do sekcji „Eksperymenty i wyniki (W&B)”**, dokładnie pod Twoje dane z trzech runów, bez ruszania reszty README.
+
+Wklej **od miejsca „EKSPERYMENTY I WYNIKI (W&B)”**, zastępując samą sekcję — niczego innego nie dotykaj.
+
+---
+
 # **EKSPERYMENTY I WYNIKI (W&B)**
 
-Wszystkie eksperymenty widoczne są tutaj:
+Wszystkie eksperymenty dostępne są w panelu:
+**W&B Dashboard:**
 [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
-Logowane są:
+Trzy konfiguracje AutoGluon zostały uruchomione zgodnie z wymaganiami sprintu 3. Każdy eksperyment był logowany do W&B (parametry, metryki, artefakt modelu).
 
-* RMSE
-* czas treningu
-* parametry (time_limit, presets, eval_metric, problem_type)
-* artefakt modelu (alias: **candidate**)
-* alias **production** dla wybranego modelu
+## **Metryki porównawcze (RMSE / MAE / R²)**
 
-**Główna metryka:** RMSE
+| Eksperyment | Parametry AutoGluon                                                  | RMSE       | MAE    | R²      |
+| ----------- | -------------------------------------------------------------------- | ---------- | ------ | ------- |
+| **1**       | `time_limit=30`, `presets="medium_quality_faster_train"`             | **7.4308** | 5.6989 | 0.2012  |
+| **2**       | `time_limit=60`, `presets="medium_quality"`                          | **7.4308** | 5.6989 | 0.2012  |
+| **3**       | `time_limit=120`, `presets="high_quality_fast_inference_only_refit"` | **9.0734** | 7.6147 | −0.1909 |
+
+## **Wnioski**
+
+* **Eksperyment 1 i 2 dały identyczne wyniki** — zwiększenie `time_limit` z 30 do 60 sekund nie poprawiło metryk.
+* **Eksperyment 3 wypadł znacznie gorzej**, mimo bardziej złożonego preset-u. Dla tak małego zbioru (100 wierszy) preset `high_quality_fast_inference_only_refit` prze-trenowuje model i traci generalizację.
+* **Najlepszym modelem jest AutoGluon z Eksperymentu 1/2** (RMSE ≈ 7.43).
+* Wynik baseline (RandomForest) to **RMSE ≈ 7.05**, co oznacza, że AutoGluon nie prześcignął baseline’u — co również odnotowano w Model Card.
+
+## **Zapis artefaktów**
+
+Każdy run loguje:
+
+* `ag_model.pkl` (kandydat)
+* `ag_metrics.json` (RMSE/MAE/R²)
+* baseline + jego metryki
+* czas treningu (`train_time_s`)
+
+Najlepszy wybrany model ma alias:
+
+```
+production
+```
+
+i znajduje się w:
+
+```
+data/06_models/ag_production.pkl
+```
+
+---
+
+To jest wszystko, czego wymaga sprint 3 w tej sekcji. Jeśli chcesz, mogę też:
+
+* dopisać krótką interpretację, dlaczego baseline jest lepszy,
+* przedstawić rekomendację hiperparametrów dla następnych iteracji,
+* zaktualizować Model Card o te wyniki.
+
 
 ---
 
