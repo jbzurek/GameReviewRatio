@@ -17,10 +17,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
 
 
+# zwraca surowy dataframe bez zmian
 def load_raw(raw_df: pd.DataFrame) -> pd.DataFrame:
     return raw_df
 
 
+# parsuje komórkę zawierającą listę lub tekst na listę stringów
 def _parse_list_cell(x: Any) -> List[str]:
     if isinstance(x, list):
         return x
@@ -40,6 +42,7 @@ def _parse_list_cell(x: Any) -> List[str]:
     return []
 
 
+# wykonuje podstawowe czyszczenie i inżynierię cech
 def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.DataFrame:
     df = df.copy()
     threshold = float(clean.get("threshold_missing", 0.3))
@@ -106,6 +109,7 @@ def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.Data
     return df
 
 
+# dzieli dane na zbiory train i test oraz enkoduje cechy
 def split_data(
     df: pd.DataFrame,
     target: str,
@@ -137,6 +141,7 @@ def split_data(
     )
 
 
+# trenuje model baseline random forest i zapisuje go do pliku
 def train_baseline(
     x_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
 ) -> RandomForestRegressor:
@@ -176,6 +181,7 @@ def train_baseline(
     return mdl
 
 
+# liczy metryki dla modelu baseline i loguje do wandb
 def evaluate(
     mdl: RandomForestRegressor, x_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
 ) -> dict:
@@ -207,6 +213,7 @@ def evaluate(
     return metrics
 
 
+# trenuje model autogluon tabular i zapisuje go jako pickle
 def train_autogluon(
     x_train: pd.DataFrame,
     y_train: pd.DataFrame | pd.Series,
@@ -284,6 +291,7 @@ def train_autogluon(
     return predictor
 
 
+# liczy metryki dla modelu autogluon i loguje do wandb
 def evaluate_autogluon(
     predictor: TabularPredictor,
     x_test: pd.DataFrame,
@@ -320,14 +328,17 @@ def evaluate_autogluon(
     return metrics
 
 
+# zwraca metryki autogluon bez zmian
 def log_ag_metrics(metrics: Dict[str, float]) -> Dict[str, float]:
     return metrics
 
 
+# zwraca metryki baseline bez zmian
 def log_baseline_metrics(metrics: dict) -> dict:
     return metrics
 
 
+# wybiera najlepszy model na podstawie rmse
 def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
     ag_rmse = ag_metrics.get("rmse", float("inf"))
     base_rmse = baseline_metrics.get("rmse", float("inf"))

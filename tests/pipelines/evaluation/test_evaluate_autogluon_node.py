@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from gamereviewratio.pipelines.evaluation.nodes import evaluate_autogluon
 
 
+# testuje czy evaluate_autogluon zwraca poprawne metryki
 def test_evaluate_autogluon_returns_metrics_with_keys_and_non_negative_values():
     x_test = pd.DataFrame({"f1": [1.0, 2.0, 3.0]})
     y_test = pd.DataFrame({"pct_pos_total": [0.5, 0.0, 1.0]})
@@ -26,6 +27,7 @@ def test_evaluate_autogluon_returns_metrics_with_keys_and_non_negative_values():
     assert metrics["rmse"] == pytest.approx(expected_rmse)
 
 
+# testuje czy kedro run tworzy katalog na modele
 def test_kedro_run_creates_model_directory(tmp_path):
     try:
         result = subprocess.run(
