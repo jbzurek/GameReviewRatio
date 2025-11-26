@@ -120,7 +120,7 @@ def split_data(
     random_state = int(split.get("random_state", 42))
 
     if target not in df.columns:
-        raise ValueError(f"Target '{target}' not in dataframe")
+        raise ValueError(f"Kolumna docelowa '{target}' nie znajduje się w DataFrame")
 
     y = pd.to_numeric(df[target], errors="coerce")
     x = df.drop(columns=[target])
@@ -255,7 +255,9 @@ def train_autogluon(
         {f"feature_{col}": str(train_df[col].dtype) for col in x_train.columns}
     )
 
-    wandb.init(project="gamereviewratio", job_type="ag-train", reinit=True, config=wandb_config)
+    wandb.init(
+        project="gamereviewratio", job_type="ag-train", reinit=True, config=wandb_config
+    )
 
     start = time.time()
 
@@ -349,6 +351,7 @@ def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
     else:
         return "baseline_model"
 
+
 # zapisuje lepszy model
 def save_production_model(best_model_name: str) -> str:
     if best_model_name == "ag_model":
@@ -356,7 +359,7 @@ def save_production_model(best_model_name: str) -> str:
     elif best_model_name == "baseline_model":
         src = Path("data/06_models/model_baseline.pkl")
     else:
-        raise ValueError(f"Unknown best_model_name={best_model_name!r}")
+        raise ValueError(f"Nieznana nazwa najlepszego modelu: {best_model_name!r}")
 
     dst = Path("data/06_models/production_model.pkl")
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -364,4 +367,3 @@ def save_production_model(best_model_name: str) -> str:
 
     # zwraca ścieżkę
     return str(dst)
-
