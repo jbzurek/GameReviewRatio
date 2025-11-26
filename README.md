@@ -2,7 +2,6 @@
 
 Predykcja odsetka pozytywnych recenzji gier na podstawie metadanych Steam.
 Projekt dostarcza gotowy pipeline ML oparty o Kedro oraz automatyczne eksperymenty AutoGluon.
-Docelowo użytkownik końcowy otrzyma: **API (FastAPI)** oraz **UI (Streamlit)**.
 
 ---
 
@@ -41,8 +40,6 @@ Projekt przeznaczony jest dla zespołów data science i developerów chcących p
 ---
 
 # **ARCHITEKTURA (HIGH-LEVEL)**
-
-Architektura logiczna projektu wygląda tak:
 
 ```
 Steam Dataset
@@ -119,34 +116,28 @@ Diagram (Kedro-Viz):
 
 ---
 
-Poniżej masz **gotowy, kompletny i zwięzły dopisek do sekcji „Eksperymenty i wyniki (W&B)”**, dokładnie pod Twoje dane z trzech runów, bez ruszania reszty README.
-
-Wklej **od miejsca „EKSPERYMENTY I WYNIKI (W&B)”**, zastępując samą sekcję — niczego innego nie dotykaj.
-
----
-
 # **EKSPERYMENTY I WYNIKI (W&B)**
 
 Wszystkie eksperymenty dostępne są w panelu:
 **W&B Dashboard:**
 [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
-Trzy konfiguracje AutoGluon zostały uruchomione zgodnie z wymaganiami sprintu 3. Każdy eksperyment był logowany do W&B (parametry, metryki, artefakt modelu).
+Trzy konfiguracje AutoGluon zostały uruchomione. Każdy eksperyment był logowany do W&B (parametry, metryki, artefakt modelu).
 
 ## **Metryki porównawcze (RMSE / MAE / R²)**
-
-| Eksperyment | Parametry AutoGluon                                                  | RMSE       | MAE    | R²      |
-| ----------- | -------------------------------------------------------------------- | ---------- | ------ | ------- |
-| **1**       | `time_limit=30`, `presets="medium_quality_faster_train"`             | **7.4308** | 5.6989 | 0.2012  |
-| **2**       | `time_limit=60`, `presets="medium_quality"`                          | **7.4308** | 5.6989 | 0.2012  |
-| **3**       | `time_limit=120`, `presets="high_quality_fast_inference_only_refit"` | **9.0734** | 7.6147 | −0.1909 |
+| Model / Eksperyment         | Parametry                                                  | RMSE       | MAE    | R²      |
+| --------------------------- | ---------------------------------------------------------- | ---------- | ------ | ------- |
+| **Baseline (RandomForest)** | `n_estimators=200`, `random_state=42`                      | **≈ 7.05** | –      | –       |
+| **AutoGluon – Exp 1**       | `time_limit=30`, `medium_quality_faster_train`             | **7.4308** | 5.6989 | 0.2012  |
+| **AutoGluon – Exp 2**       | `time_limit=60`, `medium_quality`                          | **7.4308** | 5.6989 | 0.2012  |
+| **AutoGluon – Exp 3**       | `time_limit=120`, `high_quality_fast_inference_only_refit` | **9.0734** | 7.6147 | −0.1909 |
 
 ## **Wnioski**
 
-* **Eksperyment 1 i 2 dały identyczne wyniki** — zwiększenie `time_limit` z 30 do 60 sekund nie poprawiło metryk.
-* **Eksperyment 3 wypadł znacznie gorzej**, mimo bardziej złożonego preset-u. Dla tak małego zbioru (100 wierszy) preset `high_quality_fast_inference_only_refit` prze-trenowuje model i traci generalizację.
-* **Najlepszym modelem jest AutoGluon z Eksperymentu 1/2** (RMSE ≈ 7.43).
-* Wynik baseline (RandomForest) to **RMSE ≈ 7.05**, co oznacza, że AutoGluon nie prześcignął baseline’u — co również odnotowano w Model Card.
+* Baseline ma najlepsze metryki.
+* AutoGluon nie pokazuje przewagi na małym zbiorze (100 rekordów).
+* Eksperymenty 1 i 2 mają identyczne wynik.
+* Eksperyment 3 przeucza model i ma wyraźnie gorsze metryki.
 
 ## **Zapis artefaktów**
 
@@ -166,26 +157,22 @@ production
 i znajduje się w:
 
 ```
-data/06_models/ag_production.pkl
+data/06_models/production_model.pkl
 ```
 
----
+Pozostałe artefakty:
 
-To jest wszystko, czego wymaga sprint 3 w tej sekcji. Jeśli chcesz, mogę też:
-
-* dopisać krótką interpretację, dlaczego baseline jest lepszy,
-* przedstawić rekomendację hiperparametrów dla następnych iteracji,
-* zaktualizować Model Card o te wyniki.
-
+* `model_baseline.pkl` – oryginalny baseline
+* `ag_production.pkl` – najlepszy model AutoGluon (kandydat)
 
 ---
 
 # **MODEL I MODEL CARD**
 
-Model produkcyjny (najlepszy run AutoGluon) zapisany jest jako:
+Model produkcyjny:
 
 ```
-data/06_models/ag_production.pkl
+data/06_models/production_model.pkl
 ```
 
 Model Card znajduje się w:
@@ -274,7 +261,8 @@ Testy obejmują:
 
 * czyszczenie danych (`basic_clean`)
 * podział danych (`split_data`)
-* logikę pipeline’u (podstawowe testy)
+* ewaluację AutoGluon (`evaluate_autogluon`)
+* test katalogu modeli
 
 ---
 
@@ -284,7 +272,6 @@ Testy obejmują:
 src/
   gamereviewratio/
     pipelines/
-      data_science/     # pipeline Kedro
       evaluation/       # logika czyszczenia, splitu, trenowania
 
 conf/
@@ -303,10 +290,6 @@ docs/
   model_card.md
 
 tests/
-  test_clean_node.py
-  test_split_node.py
-  test_pipeline.py
-
 images/
   kedro-pipeline.svg
 ```
