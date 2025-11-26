@@ -5,6 +5,7 @@ import random
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
+from shutil import copyfile
 
 import joblib
 import numpy as np
@@ -347,3 +348,20 @@ def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
         return "ag_model"
     else:
         return "baseline_model"
+
+# zapisuje lepszy model
+def save_production_model(best_model_name: str) -> str:
+    if best_model_name == "ag_model":
+        src = Path("data/06_models/ag_production.pkl")
+    elif best_model_name == "baseline_model":
+        src = Path("data/06_models/model_baseline.pkl")
+    else:
+        raise ValueError(f"Unknown best_model_name={best_model_name!r}")
+
+    dst = Path("data/06_models/production_model.pkl")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    copyfile(src, dst)
+
+    # zwraca ścieżkę
+    return str(dst)
+

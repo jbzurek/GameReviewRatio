@@ -10,6 +10,7 @@ from .nodes import (
     choose_best_model, # wybiera lepszy model
     log_ag_metrics, # zapisuje metryki ag
     log_baseline_metrics, # zapisuje metryki baseline
+    save_production_model # zapisuje production model
 )
 
 
@@ -77,5 +78,11 @@ def create_pipeline() -> Pipeline:
                 "best_model_name",
                 name="choose_best_model"
             ),
+            node(
+                save_production_model,
+                ["best_model_name"],
+                "production_model_path",
+                name="save_production_model"
+            )
         ]
     )
