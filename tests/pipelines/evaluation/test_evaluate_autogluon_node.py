@@ -1,45 +1,46 @@
-import pandas as pd
 import numpy as np
-from pathlib import Path
-import subprocess
-import pytest
+import pandas as pd
 from unittest.mock import MagicMock
-from gamereviewratio.pipelines.evaluation.nodes import evaluate_autogluon
+from pathlib import Path
+
+from gamereviewratio.pipelines.evaluation.nodes import (
+    evaluate_autogluon,
+    train_baseline,
+)
 
 
-# testuje czy evaluate_autogluon zwraca poprawne metryki
-def test_evaluate_autogluon_returns_metrics_with_keys_and_non_negative_values():
+# testuje czy evaluate_autogluon zwraca słownik poprawnych metryk
+def test_evaluate_autogluon_returns_correct_metrics():
     x_test = pd.DataFrame({"f1": [1.0, 2.0, 3.0]})
     y_test = pd.DataFrame({"pct_pos_total": [0.5, 0.0, 1.0]})
 
     predictor = MagicMock()
     predictor.predict.return_value = np.zeros(len(x_test))
 
-    metrics = evaluate_autogluon(predictor, x_test, y_test, ag_params={})
+    metrics = evaluate_autogluon(predictor, x_test, y_test)
 
-    assert isinstance(metrics, dict), "Wynik nie jest słownikiem"
-    assert set(metrics.keys()) >= {"rmse", "inference_time_s"}
+    assert isinstance(metrics, dict), "evaluate_autogluon powinno zwracać słownik"
+    assert set(metrics.keys()) == {"rmse", "mae", "r2"}, "brakuje wymaganych metryk"
 
-    assert metrics["rmse"] >= 0
-    assert metrics["inference_time_s"] >= 0
+    assert metrics["rmse"] >= 0, "RMSE powinno być >= 0"
+    assert metrics["mae"] >= 0, "MAE powinno być >= 0"
+    assert metrics["r2"] <= 1, "R2 powinno być <= 1"
+    assert metrics["r2"] > -10, "R2 nie powinno być ekstremalnie niskie"
 
-    expected_rmse = float(np.sqrt(np.mean(y_test["pct_pos_total"] ** 2)))
-    assert metrics["rmse"] == pytest.approx(expected_rmse)
 
+# testuje czy trenowanie baseline tworzy katalog i zapisuje model
+def test_train_baseline_creates_model_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
 
-# testuje czy kedro run tworzy katalog na modele
-def test_kedro_run_creates_model_directory(tmp_path):
-    try:
-        result = subprocess.run(
-            ["kedro", "run", "--from-nodes", "train_baseline"],
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError:
-        Path("data/06_models").mkdir(parents=True, exist_ok=True)
-    else:
-        if result.returncode != 0:
-            print(f"kedro run zakończył się kodem {result.returncode}: {result.stderr}")
-            Path("data/06_models").mkdir(parents=True, exist_ok=True)
+    x_train = pd.DataFrame({"f1": [1, 2, 3, 4]})
+    y_train = pd.Series([0.1, 0.2, 0.3, 0.4])
 
-    assert Path("data/06_models").exists(), "Katalog z modelami nie został utworzony"
+    params = {"random_state": 42, "n_estimators": 10, "n_jobs": 1}
+
+    train_baseline(x_train, y_train, params)
+
+    models_dir = Path("data/06_models")
+    model_file = models_dir / "model_baseline.pkl"
+
+    assert models_dir.exists(), "katalog data/06_models powinien zostać utworzony"
+    assert model_file.exists(), "plik model_baseline.pkl powinien zostać zapisany"

@@ -1,9 +1,9 @@
-"""
-This is a boilerplate test file for pipeline 'evaluation'
-generated using Kedro 1.0.0.
-Please add your pipeline tests here.
+from gamereviewratio.pipelines.evaluation.pipeline import create_pipeline
 
-Kedro recommends using `pytest` framework, more info about it can be found
-in the official documentation:
-https://docs.pytest.org/en/latest/getting-started.html
-"""
+
+# testuje czy pipeline evaluation buduje się poprawnie
+def test_pipeline_builds_successfully():
+    pipeline = create_pipeline()
+
+    assert pipeline is not None, "pipeline nie został utworzony"
+    assert len(pipeline.nodes) > 0, "pipeline nie zawiera żadnych node'ów"
