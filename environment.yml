@@ -15,9 +15,11 @@ dependencies:
   - scikit-learn
   - seaborn
   - pandera
+  - joblib
   - pip
 
   - pip:
+      - autogluon==1.4.0
       - black
       - kedro
       - kedro-datasets[pandas]

@@ -1,8 +1,8 @@
-target: pct_pos_total
+target: pct_pos_total # nazwa kolumny z targetem
 
 clean:
-  threshold_missing: 0.3
-  bin_flag_cols:
+  threshold_missing: 0.3 # maksymalny akceptowalny procent braków
+  bin_flag_cols: # kolumny zamieniane na flagi binarne
     - website
     - support_url
     - detailed_description
@@ -11,30 +11,62 @@ clean:
     - header_image
     - screenshots
     - movies
-  platform_cols:
+  platform_cols: # kolumny platform
     - windows
     - mac
     - linux
-  drop_cols:
+  drop_cols: # kolumny odrzucane
     - num_reviews_recent
     - pct_pos_recent
     - publishers
     - developers
     - packages
     - estimated_owners
-  mlb_cols:
+    - name
+    - reviews
+    - metacritic_url
+    - support_email
+    - notes
+  mlb_cols: # kolumny do multilabel binarizer
     - genres
     - categories
     - tags
     - supported_languages
     - full_audio_languages
-  top_n_labels: 50
+  top_n_labels: 50 # liczba najpopularniejszych etykiet do zachowania
+
+random_state: 42 # seed losowy
 
 split:
-  test_size: 0.2
-  random_state: 42
+  test_size: 0.2 # wielkość zbioru testowego
+  random_state: ${random_state}
 
 model:
-  random_state: 42
-  n_estimators: 200
-  n_jobs: -1
+  n_estimators: 200 # liczba drzew
+  n_jobs: -1 # pełne wykorzystanie cpu
+  random_state: ${random_state}
+
+autogluon:
+  time_limit: 30 # limit czasu trenowania
+  presets: "medium_quality_faster_train" # zestaw presetów
+  problem_type: "regression" # typ zadania
+  label: ${target}
+  eval_metric: "rmse"
+  random_state: ${random_state}
+
+# alternatywne konfiguracje ag
+#autogluon:
+#  time_limit: 60
+#  presets: "medium_quality"
+#  problem_type: "regression"
+#  label: ${target}
+#  eval_metric: "rmse"
+#  random_state: ${random_state}
+
+#autogluon:
+#  time_limit: 120
+#  presets: "high_quality_fast_inference_only_refit"
+#  problem_type: "regression"
+#  label: ${target}
+#  eval_metric: "rmse"
+#  random_state: ${random_state}

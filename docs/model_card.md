@@ -1,4 +1,4 @@
-# **Model Card — Game Review Ratio (AutoGluon Production Model)**
+# **Model Card — Game Review Ratio (Production Model)**
 
 ## **1. Problem & Intended Use**
 
@@ -20,7 +20,7 @@ Model ma charakter **analityczny / wspierający**, nie decyzyjny.
 
 ---
 
-## **2. Data (source, license, size, PII=no)**
+## **2. Data (source, license, size, PII)**
 
 ### Źródło danych
 
@@ -48,7 +48,7 @@ MIT (zgodnie z opisem datasetu).
 ### PII
 
 Brak danych osobowych.
-Zbiór nie zawiera recenzentów ani ich identyfikatorów – wyłącznie dane o produktach.
+Zbiór nie zawiera recenzentów ani ich identyfikatorów. Wyłącznie dane o produktach.
 
 ---
 
@@ -56,13 +56,35 @@ Zbiór nie zawiera recenzentów ani ich identyfikatorów – wyłącznie dane o 
 
 ### Główna metryka:
 
-**RMSE (Root Mean Squared Error)**  
-Powód: bardziej karze duże błędy predykcji i dobrze działa w regresji.
+**RMSE (Root Mean Squared Error)**
+Powód: karze duże błędy predykcji i jest standardem dla regresji.
 
 ### Walidacja:
 
-* podział danych: **80% train / 20% test**, losowy
-* powtarzalność: `random_state = 42`
+* podział danych: **80% train / 20% test**, losowy,
+* powtarzalność: `random_state = 42`.
+
+### Wyniki (model produkcyjny – baseline):
+
+* **RMSE (test): ~7.05**
+* **MAE:** –
+* **R²:** –
+  *(Baseline loguje tylko RMSE, zgodnie z implementacją).*
+
+### Wyniki modeli porównawczych (AutoGluon):
+
+| Eksperyment    | Parametry                                                  | RMSE  | MAE   | R²    |
+| -------------- | ---------------------------------------------------------- | ----- | ----- | ----- |
+| **AG – Exp 1** | `time_limit=30`, `medium_quality_faster_train`             | ~7.43 | ~5.69 | ~0.20 |
+| **AG – Exp 2** | `time_limit=60`, `medium_quality`                          | ~7.43 | ~5.69 | ~0.20 |
+| **AG – Exp 3** | `time_limit=120`, `high_quality_fast_inference_only_refit` | ~9.07 | ~7.61 | −0.19 |
+
+### Wnioski:
+
+* **Baseline jest najlepszy (najniższy RMSE)** i został wybrany jako model produkcyjny.
+* AutoGluon nie uzyskał lepszych wyników na małej próbce danych (~100 gier).
+* Eksperymenty AG 1 i 2 dają identyczne wyniki — dłuższy czas treningu nie poprawia jakości.
+* Preset `high_quality_fast_inference_only_refit` (Exp 3) prowadzi do przeuczenia.
 
 ---
 
@@ -70,24 +92,23 @@ Powód: bardziej karze duże błędy predykcji i dobrze działa w regresji.
 
 ### Ograniczenia:
 
-* mała próbka treningowa w wersji dev (ok. 100 gier) - możliwe niestabilności,
-* model korzysta **wyłącznie z metadanych**, nie analizuje treści recenzji,
-* różnorodność gier (AAA vs indie) może prowadzić do biasów,
-* brak pełnej reprezentacji gier niszowych.
+* mała próbka treningowa (ok. 100 gier) -> wysoka wariancja i ograniczona generalizacja,
+* model korzysta wyłącznie z metadanych,
+* różnorodność gier (AAA vs indie) może wprowadzać bias,
+* mała reprezentacja gier niszowych i starych tytułów.
 
 ### Ryzyka:
 
-* niewłaściwe decyzje biznesowe, jeśli model stosowany bez walidacji eksperckiej,
-* zbyt optymistyczne wyniki na małym zbiorze treningowym,
-* błędna interpretacja.
+* błędna interpretacja predykcji bez kontekstu dziedzinowego,
+* fałszywe poczucie pewności co do jakości gry,
+* ryzyko użycia modelu w celach decyzyjnych, do których nie został zaprojektowany.
 
 ### Mitigacje:
 
-* trenowanie na pełnym zbiorze (5000+ rekordów),
+* trenowanie na pełnym zbiorze (5000+ gier),
 * regularny retraining i monitoring w W&B,
-* zbieranie dodatkowych cech,
-* analiza błędów,
-* walidacja w rzeczywistych warunkach.
+* wzbogacenie cech o embeddingi tekstowe (opinie graczy),
+* analiza błędów i odrzucanie przypadków o wysokiej niepewności.
 
 ---
 
@@ -99,25 +120,25 @@ Powód: bardziej karze duże błędy predykcji i dobrze działa w regresji.
 
 ### Model Artifact:
 
-`gamereviewratio/ag_model:production`
+`gamereviewratio/baseline_model:production`
+
+*(Model AutoGluon został zachowany jako kandydat, ale nie wybrany).*
 
 ### Code version:
 
-Commit: `---`
-(`kedro run` wykonywany z tego commitu)
+Commit: `575d69d`
+(`kedro run` wykonano z tego commitu)
 
 ### Data version:
 
-`clean_data`
-Źródło: [Steam Games Dataset (Kaggle)](https://www.kaggle.com/datasets/artermiloff/steam-games-dataset?resource=download&select=games_march2025_full.csv)
+Plik: `data/01_raw/sample_100.csv`
+Źródło: Steam Games Dataset (Kaggle)
 
 ### Environment:
 
 * Python 3.11
-* AutoGluon 1.x
+* AutoGluon 1.x (modele porównawcze)
 * scikit-learn 1.5
 * Kedro 1.0
 * wandb
 * pandas, numpy, pyarrow
-
----
