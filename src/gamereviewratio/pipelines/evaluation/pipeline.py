@@ -4,7 +4,7 @@ from .nodes import (
     basic_clean,  # czyści i przygotowuje cechy
     split_data,  # dzieli dane na train i test
     train_baseline,  # trenuje baseline random forest
-    evaluate,  # ewaluacja baseline
+    evaluate_baseline,  # ewaluacja baseline
     train_autogluon,  # trenuje autogluon tabular
     evaluate_autogluon,  # ewaluacja autogluon
     choose_best_model,  # wybiera lepszy model
@@ -18,7 +18,11 @@ from .nodes import (
 def create_pipeline() -> Pipeline:
     return Pipeline(
         [
-            node(load_raw, "raw_data", "raw_df", name="load_raw"),
+            node(
+                load_raw,
+                "raw_data",
+                "raw_df",
+                name="load_raw"),
             node(
                 basic_clean,
                 ["raw_df", "params:clean", "params:target"],
@@ -44,7 +48,10 @@ def create_pipeline() -> Pipeline:
                 name="evaluate_autogluon",
             ),
             node(
-                log_ag_metrics, "ag_metrics_local", "ag_metrics", name="log_ag_metrics"
+                log_ag_metrics,
+                "ag_metrics_local",
+                "ag_metrics",
+                name="log_ag_metrics"
             ),
             node(
                 train_baseline,
@@ -53,20 +60,20 @@ def create_pipeline() -> Pipeline:
                 name="train_baseline",
             ),
             node(
-                evaluate,
+                evaluate_baseline,
                 ["baseline_model", "x_test", "y_test"],
-                "metrics_baseline_local",
-                name="evaluate",
+                "baseline_metrics_local",
+                name="evaluate_baseline",
             ),
             node(
                 log_baseline_metrics,
-                "metrics_baseline_local",
-                "metrics_baseline",
+                "baseline_metrics_local",
+                "baseline_metrics",
                 name="log_baseline_metrics",
             ),
             node(
                 choose_best_model,
-                ["ag_metrics_local", "metrics_baseline_local"],
+                ["ag_metrics_local", "baseline_metrics_local"],
                 "best_model_name",
                 name="choose_best_model",
             ),

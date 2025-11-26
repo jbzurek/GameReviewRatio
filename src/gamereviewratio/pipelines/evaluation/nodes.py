@@ -163,7 +163,7 @@ def train_baseline(
     mdl.fit(x_train, y_train)
     train_time_s = time.time() - start
 
-    path = Path("data/06_models/model_baseline.pkl")
+    path = Path("data/06_models/baseline_model.pkl")
     path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(mdl, path)
 
@@ -183,7 +183,7 @@ def train_baseline(
 
 
 # liczy metryki dla modelu baseline i loguje do wandb
-def evaluate(
+def evaluate_baseline(
     mdl: RandomForestRegressor, x_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series
 ) -> dict:
     if isinstance(y_test, pd.DataFrame):
@@ -275,7 +275,7 @@ def train_autogluon(
 
     train_time_s = time.time() - start
 
-    pkl_path = Path("data/06_models/ag_production.pkl")
+    pkl_path = Path("data/06_models/ag_model.pkl")
     pkl_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(predictor, pkl_path)
 
@@ -355,9 +355,9 @@ def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
 # zapisuje lepszy model
 def save_production_model(best_model_name: str) -> str:
     if best_model_name == "ag_model":
-        src = Path("data/06_models/ag_production.pkl")
+        src = Path("data/06_models/ag_model.pkl")
     elif best_model_name == "baseline_model":
-        src = Path("data/06_models/model_baseline.pkl")
+        src = Path("data/06_models/baseline_model.pkl")
     else:
         raise ValueError(f"Nieznana nazwa najlepszego modelu: {best_model_name!r}")
 
