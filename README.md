@@ -220,6 +220,12 @@ Kluczowe zależności:
 
 ---
 
+# **URUCHOM**
+
+uvicorn src.api.main:app --reload --port 8000
+
+---
+
 # **DOCKER I DOCKER-COMPOSE**
 
 ---
@@ -263,6 +269,20 @@ Testy obejmują:
 * podział danych (`split_data`)
 * ewaluację AutoGluon (`evaluate_autogluon`)
 * test katalogu modeli
+
+---
+
+# **TEST HEALTH**
+
+curl http://127.0.0.1:8000/healthz
+
+---
+
+# **PREDYKCJA (dopasuj pola do swoich)**
+
+curl -X POST http://127.0.0.1:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"feature_num": 2.9, "feature_cat": "B"}'
 
 ---
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import random
 import time
 from pathlib import Path
@@ -238,6 +239,16 @@ def train_autogluon(
     train_df = x_train.copy()
     train_df[label] = pd.to_numeric(y_series, errors="coerce")
     train_df = train_df.dropna(subset=[label])
+
+    # Zapis wymaganych kolumn dla API inferencyjnego
+    try:
+        req_cols_path = Path("data/06_models/required_columns.json")
+        req_cols_path.parent.mkdir(parents=True, exist_ok=True)
+        cols_list = list((train_df.drop(columns=[label]).columns))
+        with open(req_cols_path, "w", encoding="utf-8") as f:
+            json.dump({"columns": cols_list}, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
     random.seed(random_state)
     np.random.seed(random_state)
