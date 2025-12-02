@@ -1,7 +1,6 @@
 # **Game Review Ratio**
 
 Predykcja odsetka pozytywnych recenzji gier na podstawie metadanych Steam.
-Projekt dostarcza gotowy pipeline ML oparty o Kedro oraz automatyczne eksperymenty AutoGluon.
 
 ---
 
@@ -20,10 +19,11 @@ Projekt dostarcza gotowy pipeline ML oparty o Kedro oraz automatyczne eksperymen
 * [Konfiguracja: ENV i sekrety](#konfiguracja-env-i-sekrety)
 * [API (FastAPI)](#api-fastapi)
 * [UI (Streamlit)](#ui-streamlit)
-* [Baza danych (opcjonalnie)](#baza-danych-opcjonalnie)
+* [Baza danych](#baza-danych)
 * [Monitoring i diagnostyka](#monitoring-i-diagnostyka)
 * [Testy i jakość](#testy-i-jakość)
 * [Struktura repozytorium](#struktura-repozytorium)
+* [Required Columns (API)](#required-columns-api)
 * [Załączniki / linki](#załączniki--linki)
 
 ---
@@ -44,20 +44,20 @@ Projekt przeznaczony jest dla zespołów data science i developerów chcących p
 ```
 Steam Dataset
       ↓
-Kedro Pipeline (load → clean → split → baseline + AutoGluon → evaluate → choose_best)
+Kedro Pipeline
       ↓
-Artefakty (model.pkl + metrics.json)
+Artefakty modeli i metryk
       ↓
-W&B – eksperymenty, porównania, artefakty "production"
+W&B (eksperymenty, wersjonowanie, alias "production")
       ↓
-[TODO] FastAPI (predict endpoint)
+FastAPI (endpoint: /predict)
       ↓
-[TODO] Streamlit UI (formularz predykcji)
+Streamlit UI [TODO]
       ↓
-[TODO] GCP Cloud Run – hosting API i UI
+GCP Cloud Run [TODO]
 ```
 
-Eksperymenty śledzone są w:
+Eksperymenty śledzone są w
 **W&B Dashboard:** [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
 ---
@@ -105,8 +105,16 @@ kedro run
 ### Artefakty:
 
 * `data/03_processed/` – przetworzone dane
-* `data/06_models/` – baseline + autogluon
-* `data/09_tracking/` – metryki JSON
+* `data/06_models/`
+
+  * `baseline_model.pkl`
+  * `ag_model.pkl`
+  * `production_model.pkl`
+  * `required_columns.json`
+* `data/09_tracking/`
+
+  * `baseline_metrics.json`
+  * `ag_metrics.json`
 
 Diagram (Kedro-Viz):
 
@@ -118,13 +126,13 @@ Diagram (Kedro-Viz):
 
 # **EKSPERYMENTY I WYNIKI (W&B)**
 
-Wszystkie eksperymenty dostępne są w panelu:
-**W&B Dashboard:**
+Wszystkie eksperymenty dostępne są w panelu **W&B Dashboard:**
 [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
 
-Trzy konfiguracje AutoGluon zostały uruchomione. Każdy eksperyment był logowany do W&B (parametry, metryki, artefakt modelu).
+Trzy konfiguracje AutoGluon zostały uruchomione.
 
 ## **Metryki porównawcze (RMSE / MAE / R²)**
+
 | Model / Eksperyment         | Parametry                                                  | RMSE       | MAE    | R²      |
 | --------------------------- | ---------------------------------------------------------- | ---------- | ------ | ------- |
 | **Baseline (RandomForest)** | `n_estimators=200`, `random_state=42`                      | **≈ 7.05** | –      | –       |
@@ -135,35 +143,26 @@ Trzy konfiguracje AutoGluon zostały uruchomione. Każdy eksperyment był logowa
 ## **Wnioski**
 
 * Baseline ma najlepsze metryki.
-* AutoGluon nie pokazuje przewagi na małym zbiorze (100 rekordów).
-* Eksperymenty 1 i 2 mają identyczne wynik.
-* Eksperyment 3 przeucza model i ma wyraźnie gorsze metryki.
+* AutoGluon nie pokazuje przewagi na małym zbiorze.
+* Exp1 i Exp2 identyczne.
+* Exp3 przeuczony.
 
 ## **Zapis artefaktów**
 
 Każdy run loguje:
 
-* `ag_model.pkl` (kandydat)
-* `ag_metrics.json` (RMSE/MAE/R²)
-* baseline + jego metryki
-* czas treningu (`train_time_s`)
+* `ag_model.pkl`
+* `ag_metrics.json`
+* `baseline_model.pkl`
+* `baseline_metrics.json`
+* `required_columns.json`
+* `train_time_s`
 
-Najlepszy wybrany model ma alias:
-
-```
-production
-```
-
-i znajduje się w:
+Najlepszy model (alias `production`) zapisany jest jako:
 
 ```
 data/06_models/production_model.pkl
 ```
-
-Pozostałe artefakty:
-
-* `model_baseline.pkl` – oryginalny baseline
-* `ag_production.pkl` – najlepszy model AutoGluon (kandydat)
 
 ---
 
@@ -175,18 +174,11 @@ Model produkcyjny:
 data/06_models/production_model.pkl
 ```
 
-Model Card znajduje się w:
+Model Card:
 
 ```
 docs/model_card.md
 ```
-
-Zawiera:
-
-* opis problemu, danych, metryk,
-* ograniczenia modelu,
-* ryzyka i etyczne aspekty,
-* informacje o wersjonowaniu (run ID, artifact alias `production`).
 
 ---
 
@@ -204,25 +196,15 @@ conda activate asi-ml
 python -m ipykernel install --user --name asi-ml --display-name "Python (asi-ml)"
 ```
 
-Kluczowe zależności:
-
-* kedro
-* autogluon.tabular
-* scikit-learn
-* pandas, numpy, pyarrow
-* wandb
-* ruff, black, pre-commit
-* pytest
-
 ---
 
 # **URUCHOMIENIE LOKALNE (BEZ DOCKERA)**
 
----
+API:
 
-# **URUCHOM**
-
+```
 uvicorn src.api.main:app --reload --port 8000
+```
 
 ---
 
@@ -246,7 +228,15 @@ uvicorn src.api.main:app --reload --port 8000
 
 ---
 
-# **BAZA DANYCH (OPCJONALNIE)**
+# **BAZA DANYCH**
+
+W repozytorium znajduje się plik:
+
+```
+predictions.db
+```
+
+SQLite – lokalne logowanie predykcji z API.
 
 ---
 
@@ -263,55 +253,92 @@ pytest -q
 pre-commit run -a
 ```
 
-Testy obejmują:
-
-* czyszczenie danych (`basic_clean`)
-* podział danych (`split_data`)
-* ewaluację AutoGluon (`evaluate_autogluon`)
-* test katalogu modeli
-
----
-
-# **TEST HEALTH**
-
-curl http://127.0.0.1:8000/healthz
-
----
-
-# **PREDYKCJA (dopasuj pola do swoich)**
-
-curl -X POST http://127.0.0.1:8000/predict \
-     -H "Content-Type: application/json" \
-     -d '{"feature_num": 2.9, "feature_cat": "B"}'
-
 ---
 
 # **STRUKTURA REPOZYTORIUM**
 
 ```
-src/
-  gamereviewratio/
-    pipelines/
-      evaluation/       # logika czyszczenia, splitu, trenowania
+GameReviewRatio/
+├── src/
+│   ├── gamereviewratio/
+│   │   └── pipelines/
+│   │       └── evaluation/
+│   └── api/
+│
+├── conf/
+│   └── base/
+│       ├── catalog.yml
+│       └── parameters.yml
+│
+├── data/
+│   ├── 01_raw/
+│   ├── 02_interim/
+│   ├── 03_processed/
+│   ├── 06_models/
+│   │   ├── ag_model.pkl
+│   │   ├── baseline_model.pkl
+│   │   ├── production_model.pkl
+│   │   └── required_columns.json
+│   └── 09_tracking/
+│       ├── baseline_metrics.json
+│       └── ag_metrics.json
+│
+├── docs/
+│   └── model_card.md
+│
+├── images/
+│   └── kedro-pipeline.svg
+│
+├── tests/
+│
+├── predictions.db
+├── environment.yml
+├── pyproject.toml
+└── README.md
+```
 
-conf/
-  base/
-    catalog.yml
-    parameters.yml
+---
 
-data/
-  01_raw/
-  02_interim/
-  03_processed/
-  06_models/
-  09_tracking/
+# **REQUIRED COLUMNS (API)**
 
-docs/
-  model_card.md
+Plik:
 
-tests/
-images/
-  kedro-pipeline.svg
+```
+data/06_models/required_columns.json
+```
+
+zawiera listę kolumn, które muszą zostać przekazane do modelu przy inferencji.
+
+Model nie przyjmie danych:
+
+* z brakującymi kolumnami,
+* z dodatkowymi kolumnami,
+* w innej kolejności,
+* z innym typem danych niż trenowane.
+
+Przykład zawartości:
+
+```json
+[
+  "release_date",
+  "languages_en",
+  "platform_windows",
+  "tag_multiplayer",
+  "genre_action",
+  ...
+]
+```
+
+W API odbywa się automatyczna walidacja:
+
+1. sprawdzanie brakujących kolumn,
+2. wypełnianie pustymi wartościami, jeśli pipeline to wspiera,
+3. reranking kolumn do zgodnego z treningiem porządku.
+
+Jeśli cokolwiek się nie zgadza, to API zwróci błąd:
+
+```
+400 - InvalidInputError: Missing or unexpected columns
 ```
 
 ---
@@ -319,7 +346,7 @@ images/
 # **ZAŁĄCZNIKI / LINKI**
 
 * **W&B Project:** [W&B GameReviewRatio](https://wandb.ai/zurek-jakub-polsko-japo-ska-akademia-technik-komputerowych/gamereviewratio)
-* **Artefakty modelu** — dostępne w W&B
+* **Artefakty modelu**: dostępne w W&B
 * **Model Card:** `docs/model_card.md`
 * **Diagram potoku:** `images/kedro-pipeline.svg`
 
