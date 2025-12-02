@@ -90,7 +90,7 @@ def basic_clean(df: pd.DataFrame, clean: Dict[str, Any], target: str) -> pd.Data
         if col not in df.columns:
             continue
         series = df[col].apply(_parse_list_cell)
-        counts = {}
+        counts: Dict[str, int] = {}
         for lst in series.dropna():
             for lab in lst:
                 counts[lab] = counts.get(lab, 0) + 1
@@ -143,7 +143,7 @@ def split_data(
     )
 
 
-# trenuje model baseline random forest i zapisuje go do pliku
+# trenuje model baseline random forest i zapisuje go do pliku baseline_model.pkl
 def train_baseline(
     x_train: pd.DataFrame, y_train: pd.Series | pd.DataFrame, model: dict
 ) -> RandomForestRegressor:
@@ -215,7 +215,7 @@ def evaluate_baseline(
     return metrics
 
 
-# trenuje model autogluon tabular i zapisuje go jako pickle
+# trenuje model autogluon tabular i zapisuje go jako ag_model.pkl
 def train_autogluon(
     x_train: pd.DataFrame,
     y_train: pd.DataFrame | pd.Series,
@@ -240,7 +240,6 @@ def train_autogluon(
     train_df[label] = pd.to_numeric(y_series, errors="coerce")
     train_df = train_df.dropna(subset=[label])
 
-    # Zapis wymaganych kolumn dla API inferencyjnego
     try:
         req_cols_path = Path("data/06_models/required_columns.json")
         req_cols_path.parent.mkdir(parents=True, exist_ok=True)
@@ -363,7 +362,7 @@ def choose_best_model(ag_metrics: dict, baseline_metrics: dict) -> str:
         return "baseline_model"
 
 
-# zapisuje lepszy model
+# zapisuje lepszy model jako production_model.pkl
 def save_production_model(best_model_name: str) -> str:
     if best_model_name == "ag_model":
         src = Path("data/06_models/ag_model.pkl")

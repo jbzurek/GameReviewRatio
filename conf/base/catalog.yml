@@ -11,7 +11,7 @@ raw_data:
     encoding: utf-8
     low_memory: false
 
-# surowy csv z danymi wejściowymi - games_first_500
+# surowy csv z danymi wejściowymi - games_first_5000
 #raw_data:
 #  type: kedro_datasets.pandas.CSVDataset
 #  filepath: data/01_raw/games_first_5000.csv
